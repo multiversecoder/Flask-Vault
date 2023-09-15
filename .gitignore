@@ -1,0 +1,13 @@
+__pycache__
+*__pycache__*
+pyrigthconfig.json
+.vscode
+.mypy_cache
+dist
+ob.egg-info
+.venv
+./install.sh
+TODO.txt
+poetry.lock
+dist 
+ob.egg-info

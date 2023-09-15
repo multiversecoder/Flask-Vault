@@ -1,0 +1,10 @@
+prune Flask_Vault.egg-info
+prune tests
+include requirements.txt
+include README.md
+include LICENSE
+include MANIFEST.in
+include setup.cfg
+include .flake8
+global-exclude __pycache__
+global-exclude *.py[co]
