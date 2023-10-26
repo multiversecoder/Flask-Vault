@@ -57,7 +57,7 @@ def get_secret(secret: str) -> Optional[str]:
         del secret
         del dump
         return ret
-    except KeyError as e:
+    except (KeyError, TypeError) as e:
         return None
     return None
 
