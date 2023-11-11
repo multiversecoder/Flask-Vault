@@ -17,7 +17,7 @@ def parse_requirements(filename: str) -> List[str]:
 readme = "./README.md"
 requirements = parse_requirements("./requirements.txt")
 LICENSE = "MIT License"
-VERSION = "0.2.0"
+VERSION = "1.0.0"
 
 with open(readme) as f:
     long_description = f.read()
