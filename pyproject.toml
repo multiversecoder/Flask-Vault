@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "flask_vault"}]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8.1"
 flask = ">=3.0.0"
 cryptography = "^41.0.3"
 pyyaml = "^6.0.1"
