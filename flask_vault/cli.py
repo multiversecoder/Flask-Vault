@@ -169,10 +169,15 @@ def secrets_help(command: Optional[str] = None) -> None:
     if command is None or command == "help":
         for cmd in ("init", "show", "get", "edit", "encrypt", "decrypt"):
             click.secho(f"[flask vault {cmd}]:\n")
-            click.secho(inspect.cleandoc(globals()[f"secrets_{cmd}"].__doc__.split("Params\n")[0].strip()))
+            try:
+                click.secho(inspect.cleandoc(globals()[f"secrets_{cmd}"].__doc__.split("Params\n")[0].strip()))
+            except AttributeError:
+                click.secho(f"No documentation provided for `flask vault` {cmd}")
             click.secho("\n")
     else:
         try:
             click.secho(inspect.cleandoc(globals()[f"secrets_{command}"].__doc__.split("Params\n")[0].strip()))
+        except AttributeError:
+            click.secho(f"No documentation provided for `flask vault` {command}")
         except KeyError:
             click.secho(f"Missing `flask vault` {command} command\n")
