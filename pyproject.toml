@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Flask-Vault"
-version = "0.2.0"
+version = "1.0.0"
 description = "Secure Credential Storage for Flask"
 authors = ["Adriano Romanazzo <https://github.com/multiversecoder>"]
 license = "MIT"
