@@ -37,7 +37,7 @@ MSG_FAILED = "\n\tfailed! {msg}"
 CREDENTIALS_ENC = "credentials.toml.enc"
 
 
-def get_secret(secret: str) -> Optional[str]:
+def get_secret(secret: str) -> Optional[Any]:
     if not os.path.exists(CREDENTIALS_ENC):
         return None
     with open(CREDENTIALS_ENC, "r") as f:
