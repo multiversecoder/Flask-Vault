@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import inspect
-import yaml  # type: ignore
+import traceback
+import tomllib
 import os
 import sys
 import shlex
@@ -14,36 +15,27 @@ from flask_vault.lib.cryptography.aes import aes_gcm_decrypt, aes_gcm_encrypt
 
 DEFAULT_TPL = """
 ---
-# This file uses YAML to define secrets that are 
+# This file uses TOML to define secrets that are 
 # encrypted using AES-GCM 128
 
-# It uses the classic Key: Value syntax of yaml to add data.
+# It uses the classic Key: Value syntax of TOML to add data.
 # Example:
-#    username: my_password
+#    username =  "my_password"
 
 # To call the key-value combinations in this file from external
 # sources  use (get_secret('secret.name'))
-
-# smtp.port: 587  # For starttls
-# smtp.server: "smtp.gmail.com"
-# smtp.username: ""
-# smtp.password: ""
-# smtp.sender: "my@gmail.com"
-# smtp.receiver: "your@gmail.com"
-
-# imap.port: 587  # For starttls
-# imap.server: "smtp.gmail.com"
-# imap.username: ""
-# imap.password: ""
-
-# binance.api_key
-# binance.api_secret
-
+# [smtp]
+# port =  587  # For starttls
+# server =  "smtp.gmail.com"
+# username =  ""
+# password =  ""
+# sender =  "my@gmail.com"
+# receiver =  "your@gmail.com"
 #
 """
 
 MSG_FAILED = "\n\tfailed! {msg}"
-CREDENTIALS_ENC = "credentials.yml.enc"
+CREDENTIALS_ENC = "credentials.toml.enc"
 
 
 def get_secret(secret: str) -> Optional[str]:
@@ -51,7 +43,7 @@ def get_secret(secret: str) -> Optional[str]:
         return None
     with open(CREDENTIALS_ENC, "r") as f:
         ret = aes_gcm_decrypt(f.read())
-    dump = yaml.safe_load(ret.decode("utf-8"))
+    dump = tomllib.loads(ret.decode("utf-8"))
     try:
         ret = dump[secret].decode("utf-8") if isinstance(dump[secret], bytes) else dump[secret]
         del secret
@@ -67,7 +59,7 @@ class Credentials:
     def _all_secrets(self) -> Optional[Dict[str, Any]]:
         try:
             with open(CREDENTIALS_ENC, "rb") as f:
-                return dict(yaml.safe_load(aes_gcm_decrypt(f.read()).decode("utf-8")))
+                return dict(tomllib.loads(aes_gcm_decrypt(f.read()).decode("utf-8")))
         except FileNotFoundError:
             return None
 
@@ -79,7 +71,7 @@ class Credentials:
                 raise FileExistsError(MSG_FAILED.format(msg=f"to create credentials with key: {key}"))  # noqa
         m[key] = value
         with open(CREDENTIALS_ENC, "wb+") as cenc:
-            cenc.write(aes_gcm_encrypt(yaml.safe_dump(m).encode("utf-8")))  # type: ignore
+            cenc.write(aes_gcm_encrypt(tomllib.dumps(m).encode("utf-8")))  # type: ignore
         del value, m
 
     def _edit(self, key: str, value: str) -> None:
@@ -122,12 +114,7 @@ class Credentials:
         if not bool(ed):
             raise Exception(
                 MSG_FAILED.format(
-                    msg=inspect.cleandoc(
-                        """
-                    EDITOR not found! Please set EDITOR=<your editor>
-                    TIP: just use a *nix system with vi"""
-                    )
-                )
+                    msg="EDITOR not found! Please set EDITOR=<your editor>")
             )
         with tempfile.NamedTemporaryFile("wb+", dir="tmp") as tmp:
             try:
@@ -145,14 +132,13 @@ class Credentials:
                         with open(CREDENTIALS_ENC, "wb") as f:  # noqa
                             f.write(aes_gcm_encrypt(df.read()))
                     print(f"{CREDENTIALS_ENC} saved!")
-            except Exception as e:
+            except BaseException as e:
                 if edit:
                     print(MSG_FAILED.format(msg="Nothing saved!", end="\n"))
                     sys.exit(1)
                 else:
-                    print(MSG_FAILED.format(msg=str(e), end="\n"))
+                    print(MSG_FAILED.format(msg=traceback.format_exc(), end="\n"))
                     sys.exit(1)
-                raise e
 
 
 _Credentials = Credentials()
