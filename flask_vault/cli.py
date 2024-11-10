@@ -45,7 +45,7 @@ def secrets_init() -> None:
             click.secho(f"Creating `{CREDENTIALS_ENC}` file to store credentials")
             f.write(aes_gcm_encrypt(DEFAULT_TPL))
     else:
-        click.secho("`credentials.yml.enc` file already exists!")
+        click.secho("`credentials.toml.enc` file already exists!")
 
 
 @vault_cli.command("show")
