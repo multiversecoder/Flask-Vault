@@ -14,7 +14,6 @@ from typing import Dict, Any, Optional, cast
 from flask_vault.lib.cryptography.aes import aes_gcm_decrypt, aes_gcm_encrypt
 
 DEFAULT_TPL = """
----
 # This file uses TOML to define secrets that are 
 # encrypted using AES-GCM 128
 
@@ -23,7 +22,7 @@ DEFAULT_TPL = """
 #    username =  "my_password"
 
 # To call the key-value combinations in this file from external
-# sources  use (get_secret('secret.name'))
+# sources  use (get_secret("secret").get("name"))
 # [smtp]
 # port =  587  # For starttls
 # server =  "smtp.gmail.com"
