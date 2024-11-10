@@ -1,6 +1,6 @@
 # About Flask Vault
 
-[**Flask-Vault**](https://github.com/multiversecoder/Flask-Vault) provides several cli commands to store secrets that you do not want to keep in the clear, using symmetric encryption with **AES-GCM**. These commands allow you to save very important credentials such as API keys, database credentials, etc.
+[**Flask-Vault**](https://github.com/multiversecoder/Flask-Vault) provides several cli commands and Python functions to store secrets that you do not want to keep in the clear, using symmetric encryption with **AES-GCM**. These commands and functions allow you to safely read/write very important credentials such as API keys, database credentials, etc.
 
 In addition, **Flask-Vault** contains several helpers to simplify the encryption and decryption of data.
 
@@ -8,7 +8,7 @@ In addition, **Flask-Vault** contains several helpers to simplify the encryption
 
 In the world of web development, safeguarding sensitive information is a paramount concern. When it comes to managing credentials when using [Flask](https://flask.palletsprojects.com/), two prominent options emerge: **Flask-Vault** and [Dotenv](https://github.com/theskumar/python-dotenv). While both have their merits, **Flask-Vault** stands out as the superior choice for securing critical data.
 
-**Flask-Vault** offers a robust solution for protecting sensitive information. Stored in an encrypted credentials.yml.enc file, this data is shielded by an added layer of security. It can only be decrypted with the master key, ensuring that even if the file falls into the wrong hands, the information remains inaccessible.
+**Flask-Vault** offers a robust solution for protecting sensitive information. Stored in an encrypted credentials.toml.enc file, this data is shielded by an added layer of security. It can only be decrypted with the master key, ensuring that even if the file falls into the wrong hands, the information remains inaccessible.
 
 Additionally, the encrypted editor, accessed through `flask vault edit`, allows for secure direct editing of the credentials file. This feature is invaluable for making swift adjustments to sensitive information without compromising security.
 
@@ -40,13 +40,12 @@ Here are some benefits of using AES-GCM with a 128-bit key:
 # Flask-Vault Dependencies
 
 Flask-Vault uses few dependencies to secure data and files, here are the 2 main dependencies of this library:
+- [Flask](https://flask.palletsprojects.com/)
 - [Cryptography](https://cryptography.io/)
-- [PyYAML](https://pyyaml.org/)
 
 ```toml
 python = ">=3.7"
 cryptography = "^41.0.3"
-pyyaml = "^6.0.1"
 ```
 
 # Getting Started with Flask-Vault
@@ -89,7 +88,7 @@ app.cli.add_command(vault_cli)
 
 The default editor used by `Flask-Vault` is **vi**.
 
-The example below shows how to use an editor other than **vi** to show or edit credentials saved in `credentials.yml.enc`. As shown, the example will use `nano` editor to use the `flask vault show` command. 
+The example below shows how to use an editor other than **vi** to show or edit credentials saved in `credentials.toml.enc`. As shown, the example will use `nano` editor to use the `flask vault show` command. 
 
 ```sh
 $> EDITOR=nano flask vault show
@@ -97,10 +96,10 @@ $> EDITOR=nano flask vault show
 
 ## Cli Commands
 
-- > **flask vault init**: The `flask vault init` command will initialize the environment needed for Flask-Vault to operate. This command will create the `credentials.yml.enc` file, the `master.key` file and the `tmp` folder (which will be used internally by Flask-Vault). If you run this command a second time, no action will be taken since you will not be able to overwrite the created files.
-- > **flask vault get [secret_name]**: The `flask vault get` command will decrypt `credentials.yml.enc` and display the selected secret in terminal.
-- > **flask vault show**: The `flask vault show` command will decrypt the contents of the `credentials.yml.enc` file using `master.key` and open it in read-only mode to show the saved credentials.
-- > **flask vault edit**: The `flask vault show` command will decrypt the contents of the `credentials.yml.enc` file using `master.key` and open it in edit mode.
+- > **flask vault init**: The `flask vault init` command will initialize the environment needed for Flask-Vault to operate. This command will create the `credentials.toml.enc` file, the `master.key` file and the `tmp` folder (which will be used internally by Flask-Vault). If you run this command a second time, no action will be taken since you will not be able to overwrite the created files.
+- > **flask vault get [secret_name]**: The `flask vault get` command will decrypt `credentials.toml.enc` and display the selected secret in terminal.
+- > **flask vault show**: The `flask vault show` command will decrypt the contents of the `credentials.toml.enc` file using `master.key` and open it in read-only mode to show the saved credentials.
+- > **flask vault edit**: The `flask vault show` command will decrypt the contents of the `credentials.toml.enc` file using `master.key` and open it in edit mode.
 - > **flask vault encrypt [filename]**: The `flask vault encrypt` command will create an encrypted file. The generated file will be protected by AES-GCM encryption and will use a `.enc` extension to distinguish it from the plaintext file.
 - > **flask vault decrypt [filename]**: The `flask vault decrypt` command will decrypt a file with the extension `.enc` and display its contents in the terminal.
 
@@ -144,24 +143,24 @@ def decrypt():
     return render_template("decrypt.html", **ctx)
 ```
 
-## Obtaining credentials stored inside the `credentials.yml.enc` file
+## Obtaining credentials stored inside the `credentials.toml.enc` file
 
-The example below shows how to get secrets from the `credentials.yml.enc` file using Flask-Vault's `get_secrets` function. In this example `get_secret` will be used to configure the database, preventing anyone who does not have access to the `master.key` from reading the username, password, and database name in clear text
+The example below shows how to get secrets from the `credentials.toml.enc` file using Flask-Vault's `get_secret` function. In this example `get_secret` will be used to configure the database, preventing anyone who does not have access to the `master.key` from reading the username, password, and database name in clear text
 
 
-#### credentials.yml.enc (after editing)
+#### credentials.toml.enc (after editing)
 
-```yaml
----
+```toml
 # ... other stuff
-db.name: my-db-name
-db.username: root
-db.password: my-db-password
+[db]
+name = "my-db-name"
+username = "root"
+password = "my-db-password"
 ```
 
-### How to get secrets from `credentials.yml.enc`
+### How to get secrets from `credentials.toml.enc`
 
-Use the `flask_vault.utils.get_secret` function to obtain secrets and credentials stored inside the `credentials.yml.enc` file.
+Use the `flask_vault.utils.get_secret` function to obtain secrets and credentials stored inside the `credentials.toml.enc` file.
 
 #### app.py using `flask_vault.utils.get_secret`
 ```python
@@ -177,11 +176,11 @@ def get_db():
     if db is None:
         try:
             conn = mariadb.connect(
-                user=get_secret("db.username"),
-                password=get_secret("db.password")
+                user=get_secret("db").get("username"),
+                password=get_secret("db").get("password"),
                 host="127.0.0.1",
                 port=3306,
-                database=get_secret("db.name"),
+                database=get_secret("db").get("name"),
             )
             db = g._database = conn 
         except mariadb.Error as e:
@@ -208,7 +207,7 @@ To suggest a change to the code or documentation, please create a new pull reque
 If you feel that my work has been useful and you are interested in supporting this project and any future projects, please leave me a donation using one of the following cryptocurrencies.
 
 
-- **Bitcoin (Segwit)**: `bc1q8vnltjge25dks05tv49eknvrar6pzu7837mnvt`
+- **Bitcoin (Segwit)**: `bc1qy8h7d9xt8442axcyzdq8q3vglvcqzexdmjhawp`
 
 # License
 
